@@ -21,7 +21,6 @@
         }
 
         * {
-            box-style: border-box;
             box-sizing: border-box;
             margin: 0;
             padding: 0;
@@ -125,7 +124,6 @@
             animation: pulseGold 2s infinite alternate;
         }
 
-        /* Perbaikan Grid Utama */
         .countdown-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -255,6 +253,9 @@
             font-family: 'Playfair Display', serif;
             font-size: 1.6rem;
             margin-bottom: 20px;
+            background: linear-gradient(to right, #ffffff, #fbcfe8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .stats-grid {
@@ -413,31 +414,12 @@
             color: #4a5568;
         }
 
-        .celebration-screen {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: radial-gradient(circle at center, #1e0b36 0%, #050212 100%);
-            z-index: 200;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 20px;
-        }
-
-        /* --- MEDIA QUERY RESPONSIVE FIX --- */
         @media (max-width: 768px) {
             header h1 { font-size: 2rem; }
             header p { font-size: 0.9rem; }
-            
-            /* Sizing grid dibuat 2x2 agar muat sempurna di layar HP */
-            .countdown-grid { 
-                grid-template-columns: repeat(2, 1fr); 
-                gap: 12px; 
-            }
+            .countdown-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
             .time-val { font-size: 2.3rem; }
             .time-label { font-size: 0.7rem; }
-            
             .stats-grid { grid-template-columns: 1fr; gap: 10px; }
             .moon { width: 70px; height: 70px; }
         }
@@ -498,7 +480,7 @@
             </div>
 
             <div class="journey-section">
-                <h2>Perjalanan Kita</h2>
+                <h2>Kembalinya status mas</h2>
                 <div class="stats-grid">
                     <div class="stat-box">
                         <span class="stat-num" id="days-passed">0</span>
@@ -516,7 +498,7 @@
                     </div>
                     <div class="timeline-nodes">
                         <div class="timeline-node active" onclick="showTimelineDetail('start')">
-                            <div class="timeline-label" id="lbl-start-date">Awal</div>
+                            <div class="timeline-label" id="lbl-start-date">27 Mei</div>
                         </div>
                         <div class="timeline-node" id="node-current" onclick="showTimelineDetail('current')">
                             <div class="timeline-label">Hari Ini</div>
@@ -550,9 +532,8 @@
     </div>
 
     <script>
-        // === PERBAIKAN: Menggunakan format numerik murni agar 100% kompatibel di HP ===
-        // Parameter: Tahun, Bulan (0 = Jan, 5 = Juni), Tanggal, Jam, Menit, Detik
-        const TANGGAL_MULAI_HUBUNGAN = new Date(2024, 5, 17, 0, 0, 0); 
+        // === PERUBAHAN UTAMA: Tanggal diubah ke 27 Mei 2026 murni numerik (Bulan Mei ditulis indeks 4) ===
+        const TANGGAL_MULAI_HUBUNGAN = new Date(2026, 4, 27, 0, 0, 0); 
         const TANGGAL_TARGET_COUNTDOWN = new Date(2026, 5, 17, 0, 0, 0); 
 
         const kumpulanKutipan = [
@@ -640,6 +621,9 @@
                 document.getElementById('hours').innerText = "00";
                 document.getElementById('minutes').innerText = "00";
                 document.getElementById('seconds').innerText = "00";
+                document.getElementById('main-progress').style.width = `100%`;
+                document.getElementById('timeline-bar').style.width = `100%`;
+                document.getElementById('progress-percent').innerText = `Progress Kedekatan: 100%`;
                 return;
             }
 
@@ -653,9 +637,13 @@
             document.getElementById('minutes').innerText = String(m).padStart(2, '0');
             document.getElementById('seconds').innerText = String(s).padStart(2, '0');
 
+            // Logika perhitungan progress baru berdasarkan rentang waktu 27 Mei 2026 s/d 17 Juni 2026
             const totalDurasi = TANGGAL_TARGET_COUNTDOWN.getTime() - TANGGAL_MULAI_HUBUNGAN.getTime();
             const waktuBerlalu = sekarang.getTime() - TANGGAL_MULAI_HUBUNGAN.getTime();
-            const hariBerlalu = Math.floor(waktuBerlalu / (1000 * 60 * 60 * 24));
+            
+            // Hitung jumlah hari berlalu sejak tanggal 27 mei 2026
+            let hariBerlalu = Math.floor(waktuBerlalu / (1000 * 60 * 60 * 24));
+            hariBerlalu = Math.max(0, hariBerlalu); // Mencegah angka minus jika dibuka sebelum 27 Mei
             
             document.getElementById('days-passed').innerText = hariBerlalu;
             document.getElementById('days-remaining').innerText = d;
@@ -681,17 +669,6 @@
             }
         }
 
-        function gantiQuote() {
-            const display = document.getElementById('quote-display');
-            if(!display) return;
-            display.classList.remove('show');
-            setTimeout(() => {
-                quoteIndex = (quoteIndex + 1) % kumpulanKutipan.length;
-                display.innerText = kumpulanKutipan[quoteIndex];
-                display.classList.add('show');
-            }, 800);
-        }
-
         function openLetter() { document.getElementById('letter-modal').classList.add('open'); }
         function closeLetter(event, forced = false) {
             if(forced || event.target.classList.contains('modal-overlay')) {
@@ -705,16 +682,16 @@
             const letterContent = document.getElementById('letter-text');
             
             if (node === 'start') {
-                letterTitle.innerText = "Awal Kisah Kita";
-                letterContent.innerText = `Langkah pertama komitmen kita dimulai di sini. Setiap detik sejak hari itu membangun jembatan rasa percaya kita hari ini.`;
+                letterTitle.innerText = "Awal Perubahan Status";
+                letterContent.innerText = `Titik awal grafik ini dimulai pada 27 Mei 2026. Langkah awal yang menandakan pergerakan proses kembalinya status mas yang dinantikan.`;
                 openLetter();
             } else if (node === 'current') {
                 letterTitle.innerText = "Di Titik Hari Ini";
-                letterContent.innerText = "Hari ini kita melihat angka yang terus bergerak mundur. Menandakan jarak yang memisahkan kita berdua juga terus terpangkas habis.";
+                letterContent.innerText = "Hari ini posisi grafik kita terus berjalan merangkak naik, menunjukkan persentase kedekatan waktu yang kian matang.";
                 openLetter();
             } else if (node === 'end') {
-                letterTitle.innerText = "Hari yang Dinanti";
-                letterContent.innerText = `17 Juni 2026. Garis akhir penantian sekaligus gerbang awal untuk babak baru kehidupan kita selamanya.`;
+                letterTitle.innerText = "Hari Esok Abadi";
+                letterContent.innerText = `17 Juni 2026. Target utama penantian, gerbang selesainya hitungan mundur sekaligus puncak kembalinya status mas seutuhnya.`;
                 openLetter();
             }
         }
@@ -756,7 +733,6 @@
             animateParticles();
             perbaruiCountdown();
             setInterval(perbaruiCountdown, 1000);
-            setInterval(gantiQuote, 5000);
             document.getElementById('lbl-start-date').innerText = TANGGAL_MULAI_HUBUNGAN.toLocaleDateString('id-ID', {day: 'numeric', month: 'short'});
         };
     </script>
