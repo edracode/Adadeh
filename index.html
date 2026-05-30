@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menuju Hari yang Kita Tunggu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0a0b1e 0%, #1a0933 50%, #3d1243 100%);
+            --glass-bg: rgba(255, 255, 255, 0.06);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glow-color: rgba(236, 72, 153, 0.4);
+            --gold-glow: rgba(212, 175, 55, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #e2e8f0;
+            --accent: #ec4899;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+
+        /* Canvas untuk Animasi Latar Belakang */
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Efek Bulan Bercahaya */
+        .moon {
+            position: fixed;
+            top: 10%;
+            right: 10%;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(254,243,199,0.8) 50%, rgba(254,243,199,0) 70%);
+            border-radius: 50%;
+            z-index: 2;
+            filter: blur(5px);
+            animation: pulseMoon 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        /* Wrapper Konten Utama (Parallax) */
+        .container {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 900px;
+            padding: 40px 20px;
+            text-align: center;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+            animation: fadeInPage 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Header / Judul */
+        header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            background: linear-gradient(to right, #ffffff, #fbcfe8, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+            text-shadow: 0 0 30px var(--glow-color);
+        }
+
+        header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            max-width: 600px;
+            margin: 0 auto 40px auto;
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        /* Status Banner Khusus (<30 Hari / <7 Hari) */
+        #status-banner {
+            display: inline-block;
+            padding: 8px 24px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 25px;
+            transition: all 0.5s ease;
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        .banner-active {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+        .banner-gold {
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            color: #fef08a;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+            animation: pulseGold 2s infinite alternate;
+        }
+
+        /* Grid Kotak Countdown */
+        .countdown-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .countdown-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 25px 10px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .countdown-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
+            pointer-events: none;
+        }
+
+        /* Efek Berdenyut pada Countdown */
+        .glow-active {
+            box-shadow: 0 0 30px var(--glow-color), inset 0 0 15px rgba(255,255,255,0.05);
+            border-color: rgba(236, 72, 153, 0.3);
+            animation: cardPulse 3s infinite ease-in-out;
+        }
+        .glow-gold-active {
+            box-shadow: 0 0 35px var(--gold-glow), inset 0 0 15px rgba(212, 175, 55, 0.1);
+            border-color: rgba(212, 175, 55, 0.5);
+            animation: cardPulseGold 3s infinite ease-in-out;
+        }
+
+        .time-val {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 600;
+            display: block;
+            line-height: 1;
+            margin-bottom: 8px;
+            backface-visibility: hidden;
+            transition: transform 0.3s ease;
+        }
+        
+        .time-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #cbd5e1;
+            font-weight: 400;
+        }
+
+        /* Progress Bar Section */
+        .progress-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            position: relative;
+            overflow: visible;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent) 0%, #a855f7 50%, #6366f1 100%);
+            border-radius: 10px;
+            box-shadow: 0 0 15px var(--accent);
+            transition: width 1s ease-in-out;
+            position: relative;
+        }
+
+        .progress-indicator {
+            position: absolute;
+            right: -6px;
+            top: -5px;
+            width: 20px;
+            height: 20px;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #ffffff, 0 0 30px var(--accent);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: pulseIndicator 1.5s infinite;
+        }
+        .progress-indicator svg {
+            width: 12px;
+            height: 12px;
+            fill: var(--accent);
+        }
+
+        /* Quotes Section */
+        .quote-container {
+            min-height: 60px;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .quote-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            font-style: italic;
+            color: #f1f5f9;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.8s ease;
+            max-width: 700px;
+            line-height: 1.6;
+        }
+        .quote-text.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Section Perjalanan Kita & Timeline */
+        .journey-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .journey-section h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 35px;
+        }
+
+        .stat-box {
+            padding: 15px;
+            background: rgba(0,0,0,0.15);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        .stat-box span {
+            display: block;
+        }
+        .stat-num {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #fbcfe8;
+            margin-bottom: 5px;
+        }
+        .stat-lbl {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Timeline Horizontal Interaktif */
+        .timeline-container {
+            position: relative;
+            padding: 20px 0;
+            margin-top: 20px;
+        }
+        .timeline-line {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            position: relative;
+        }
+        .timeline-progress {
+            position: absolute;
+            left: 0; top: 0; height: 100%; width: 0%;
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+        .timeline-nodes {
+            display: flex;
+            justify-content: space-between;
+            position: absolute;
+            width: 100%;
+            top: 12px;
+            left: 0;
+        }
+        .timeline-node {
+            width: 14px;
+            height: 14px;
+            background: #1e1b4b;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .timeline-node:hover, .timeline-node.active {
+            border-color: var(--accent);
+            background: #ffffff;
+            transform: scale(1.3);
+            box-shadow: 0 0 10px var(--accent);
+        }
+        .timeline-label {
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            transition: color 0.3s;
+        }
+        .timeline-node:hover .timeline-label, .timeline-node.active .timeline-label {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        /* Interaksi Kontrol / Tombol */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: #ffffff;
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            background: #ffffff;
+            color: #0a0b1e;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(255,255,255,0.15);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, var(--accent) 0%, #db2777 100%);
+            border: none;
+            box-shadow: 0 4px 20px rgba(236, 72, 153, 0.3);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #ffffff 0%, #fbcfe8 100%);
+            color: #db2777;
+            box-shadow: 0 10px 30px rgba(236, 72, 153, 0.5);
+        }
+
+        /* Modal Surat Cinta */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(10, 11, 30, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.6s ease;
+        }
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .letter-container {
+            background: #fff0f6;
+            color: #2d3748;
+            width: 90%;
+            max-width: 550px;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            transform: scale(0.8) rotateX(-20deg);
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 8px solid #ffffff;
+        }
+        .modal-overlay.open .letter-container {
+            transform: scale(1) rotateX(0deg);
+        }
+
+        .letter-paper {
+            padding: 40px 30px;
+            position: relative;
+            background-image: linear-gradient(rgba(236, 72, 153, 0.05) 1px, transparent 1px);
+            background-size: 100% 2rem;
+            line-height: 2rem;
+        }
+        
+        .letter-paper h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: #b91c1c;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+        .letter-content {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-style: italic;
+            margin-bottom: 30px;
+            text-align: left;
+            color: #4a5568;
+        }
+
+        /* Animasi Kebahagiaan Utama (Saat 00:00 Terbuka) */
+        .celebration-screen {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle at center, #1e0b36 0%, #050212 100%);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+        .celebration-content h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #ffffff;
+            text-shadow: 0 0 50px #ff007f, 0 0 100px #ff007f;
+            animation: finalGlow 2s infinite alternate;
+        }
+        .celebration-content p {
+            font-size: 1.5rem;
+            max-width: 700px;
+            margin: 0 auto 40px auto;
+            color: #fbcfe8;
+            font-weight: 300;
+            line-height: 1.6;
+        }
+
+        /* --- Keyframes Animasi --- */
+        @keyframes fadeInPage {
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes pulseMoon {
+            0%, 100% { transform: scale(1); opacity: 0.8; filter: blur(5px); }
+            50% { transform: scale(1.05); opacity: 0.95; filter: blur(3px); box-shadow: 0 0 40px rgba(254,243,199,0.5); }
+        }
+        @keyframes cardPulse {
+            0%, 100% { box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), 0 0 15px rgba(236, 72, 153, 0.2); }
+            50% { box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), 0 0 35px rgba(236, 72, 153, 0.5); border-color: rgba(236, 72, 153, 0.5); }
+        }
+        @keyframes cardPulseGold {
+            0%, 100% { box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), 0 0 15px rgba(212, 175, 55, 0.2); }
+            50% { box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), 0 0 40px rgba(212, 175, 55, 0.6); border-color: rgba(212, 175, 55, 0.7); }
+        }
+        @keyframes pulseGold {
+            0% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
+            100% { box-shadow: 0 0 25px rgba(212, 175, 55, 0.5); }
+        }
+        @keyframes pulseIndicator {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        @keyframes finalGlow {
+            0% { text-shadow: 0 0 30px #ff007f, 0 0 50px #ff007f; transform: scale(1); }
+            100% { text-shadow: 0 0 60px #ff007f, 0 0 120px #ff007f, 0 0 150px #a855f7; transform: scale(1.02); }
+        }
+
+        /* Responsivitas Layar */
+        @media (max-width: 768px) {
+            header h1 { font-size: 2.2rem; }
+            header p { font-size: 0.95rem; }
+            .countdown-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+            .time-val { font-size: 2.5rem; }
+            .time-label { font-size: 0.7rem; }
+            .stats-grid { grid-template-columns: 1fr; gap: 15px; }
+            .celebration-content h1 { font-size: 2.5rem; }
+            .celebration-content p { font-size: 1.1rem; }
+            .moon { width: 80px; height: 80px; top: 5%; right: 5%; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="bgCanvas"></canvas>
+    
+    <div class="moon"></div>
+
+    <div class="container" id="main-container">
+        <header>
+            <div id="status-banner"></div>
+            <h1 id="main-title">Menuju Hari yang Kita Tunggu</h1>
+            <p id="sub-title">Setiap detik yang terlewati bukanlah hitungan mundur biasa, melainkan langkah pasti yang membawa dua hati semakin dekat pada puncak penantian indah kita.</p>
+        </header>
+
+        <main>
+            <div class="countdown-grid">
+                <div class="countdown-card" id="card-days">
+                    <span class="time-val" id="days">00</span>
+                    <span class="time-label">Hari</span>
+                </div>
+                <div class="countdown-card" id="card-hours">
+                    <span class="time-val" id="hours">00</span>
+                    <span class="time-label">Jam</span>
+                </div>
+                <div class="countdown-card" id="card-minutes">
+                    <span class="time-val" id="minutes">00</span>
+                    <span class="time-label">Menit</span>
+                </div>
